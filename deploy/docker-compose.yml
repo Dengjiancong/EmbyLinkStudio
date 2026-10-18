@@ -1,0 +1,26 @@
+services:
+  embylink-agent:
+    image: python:3.12-slim
+    container_name: embylink-agent
+    user: "0:0"
+    command: ["python", "-u", "/app/nas_agent.py"]
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      AGENT_TOKEN: "${AGENT_TOKEN:?Set AGENT_TOKEN in .env}"
+      ENABLE_METADATA_WRITES: "${ENABLE_METADATA_WRITES:-false}"
+      REGIONS_FILE: /config/regions.json
+      QBIT_USERNAME: "${QBIT_USERNAME:-}"
+      QBIT_PASSWORD: "${QBIT_PASSWORD:-}"
+      STATE_ROOT: /state
+      PORT: "8787"
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./app:/app:ro
+      - ./config:/config:ro
+      - ${MEDIA_ROOT:?Set MEDIA_ROOT in .env}:/media:rw
+      - ./state:/state:rw
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped

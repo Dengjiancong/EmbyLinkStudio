@@ -1,0 +1,30 @@
+{
+  "downloaders": {
+    "qb-main": {
+      "url": "http://NAS_IP:8080",
+      "username_env": "QBIT_USERNAME",
+      "password_env": "QBIT_PASSWORD",
+      "path_mappings": [
+        {
+          "remote": "/downloads",
+          "local": "/media/originals"
+        }
+      ],
+      "unmatched": "defer"
+    }
+  },
+  "regions": [
+    {
+      "id": "media",
+      "name": "媒体收藏",
+      "source_root": "/media/originals",
+      "destination_root": "/media/hardlinks",
+      "source_display": "NAS 媒体父目录/originals",
+      "destination_display": "NAS 媒体父目录/hardlinks",
+      "default_source_relative": "",
+      "default_dest_relative": "",
+      "downloader": "qb-main",
+      "require_downloader": false
+    }
+  ]
+}

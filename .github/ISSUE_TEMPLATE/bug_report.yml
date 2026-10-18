@@ -1,0 +1,26 @@
+name: 问题反馈
+description: 报告程序、核验或界面问题
+body:
+  - type: markdown
+    attributes:
+      value: 隐藏密钥、用户名、真实媒体名称和 NAS 路径。安全漏洞遵循 SECURITY.md，不公开可利用细节。
+  - type: input
+    id: versions
+    attributes:
+      label: Windows 客户端 / NAS 执行端版本
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: NAS 系统、CPU 架构、文件系统、部署方式
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 测试目录复现步骤与预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果和脱敏日志

@@ -1,0 +1,14 @@
+{
+  "regions": [
+    {
+      "id": "media",
+      "name": "媒体收藏",
+      "source_root": "/media/originals",
+      "destination_root": "/media/hardlinks",
+      "source_display": "NAS 媒体父目录/originals",
+      "destination_display": "NAS 媒体父目录/hardlinks",
+      "default_source_relative": "",
+      "default_dest_relative": ""
+    }
+  ]
+}
