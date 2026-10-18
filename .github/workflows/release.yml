@@ -1,0 +1,92 @@
+name: 构建并发布安装包
+on:
+  push:
+    branches: [main]
+    paths: [release-request.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: public-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: 校验发布申请并定位已审查源码
+        id: request
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $request = Get-Content release-request.json -Raw -Encoding utf8 | ConvertFrom-Json
+          $version = [string]$request.version
+          $source = [string]$request.source_commit
+          if ($version -notmatch '^\d+\.\d+\.\d+$' -or $source -notmatch '^[a-f0-9]{40}$') { throw '发布申请格式无效' }
+          $notes = Join-Path $env:RUNNER_TEMP 'embylink-release-notes.md'
+          Copy-Item -LiteralPath "docs/releases/v$version.md" -Destination $notes
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "source=$source" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "notes=$notes" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          git checkout --detach $source
+          if ($LASTEXITCODE -ne 0) { throw '无法定位发行源码' }
+          $actualVersion = python -c "from link_rules import VERSION; print(VERSION)"
+          if ($LASTEXITCODE -ne 0 -or $actualVersion -ne $version) { throw '源码版本与发布申请不一致' }
+      - name: 安装固定构建依赖
+        run: python -m pip install -r requirements-dev.txt
+      - name: 检查源码隐私边界
+        run: python tools/check_public.py
+      - name: 回归测试并构建发行文件
+        shell: pwsh
+        run: ./build.ps1
+      - name: 生成源码包并校验完整发行清单
+        run: |
+          python tools/source_snapshot.py
+          python tools/check_release.py dist
+      - name: 检查 Windows 程序启动
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.request.outputs.version }}
+        run: |
+          $version = $env:RELEASE_VERSION
+          $exe = Join-Path $PWD "dist/EmbyLinkStudio-v$version.exe"
+          $report = Join-Path $PWD 'build/gui-release.json'
+          $process = Start-Process -FilePath $exe -ArgumentList '--self-test', $report -WindowStyle Hidden -Wait -PassThru
+          if ($process.ExitCode -ne 0 -or -not (Test-Path $report)) { throw '程序启动自检失败' }
+          $result = Get-Content $report -Raw -Encoding utf8 | ConvertFrom-Json
+          if ($result.gui -ne 'ok' -or $result.version -ne $version) { throw '程序版本自检失败' }
+      - name: 上传指定文件并发布中文说明
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.request.outputs.version }}
+          RELEASE_SOURCE: ${{ steps.request.outputs.source }}
+          RELEASE_NOTES: ${{ steps.request.outputs.notes }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = $env:RELEASE_VERSION
+          $tag = "v$version"
+          $assets = @(
+            "dist/EmbyLinkStudio-v$version.exe",
+            "dist/EmbyLinkStudio-NAS-v$version.zip",
+            "dist/EmbyLinkStudio-NAS-update-v$version.zip",
+            "dist/EmbyLinkStudio-source-v$version.zip",
+            'dist/SHA256SUMS.txt'
+          )
+          foreach ($asset in $assets) {
+            if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) { throw '发行文件缺失' }
+          }
+          gh release view $tag --repo $env:GH_REPO --json tagName 2>$null
+          if ($LASTEXITCODE -eq 0) { throw '版本已存在；不覆盖或删除已有安装包' }
+          gh release create $tag @assets --repo $env:GH_REPO --target $env:RELEASE_SOURCE --title "$tag · 开源准备与工程整理版" --notes-file $env:RELEASE_NOTES
+          if ($LASTEXITCODE -ne 0) { throw '发行上传未完成；保留现场，不覆盖重试' }
+          gh release view $tag --repo $env:GH_REPO --json url,tagName,assets
+          if ($LASTEXITCODE -ne 0) { throw '无法读取发行结果' }

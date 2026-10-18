@@ -1,6 +1,6 @@
 # 开源准备与发布
 
-当前仅完成本地准备，没有创建 GitHub 仓库、上传文件或运行 GitHub Actions。
+本页保留开源准备检查步骤。源码已公开，安装包发行使用经维护者确认的发布申请，详见 [安装包发布流程](release-process.md)。
 
 ## 公开边界
 旧本地仓库历史含个人配置记录，不能直接整体推送。先运行：
@@ -17,7 +17,7 @@
 5. 阅读 THIRD_PARTY_NOTICES.md 和包内 Python/Tcl/Tk 许可。
 6. 用一次性测试目录在 NAS 验收，确认后才能称为已验证发布。
 
-CI 配置为 Windows/Linux、Python 3.12/3.13 测试；手动构建工作流只生成并检查候选，不上传构建产物、不创建 Release。当前环境无法运行远端 Actions，首次发布前需查看其实际运行结果。
+CI 配置为 Windows/Linux、Python 3.12/3.13 测试；普通手动构建工作流只生成并检查候选，不上传构建产物、不创建 Release；独立 release.yml 仅在确认发布申请时构建和发布。Windows/Linux、Python 3.12/3.13 四组远端测试已通过；新版本仍需检查对应提交的实际运行结果。
 GitHub Actions 的外部动作版本应定期审查。
 
 ## 新用户与升级用户

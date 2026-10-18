@@ -21,6 +21,10 @@
 - 当前生产执行端要求 Linux x86-64，其他架构未支持；并非所有 NAS 都已验证。
 - 默认 HTTP 仅用于可信局域网，不直接暴露公网。详见 [安全政策](SECURITY.md)。
 
+## 下载
+正式安装包在 [GitHub Releases](https://github.com/Dengjiancong/EmbyLinkStudio/releases)。
+Windows 使用 EXE 便携程序；首次部署 NAS 使用完整包，已有用户使用 update 升级包。下载后可用 SHA256SUMS.txt 核对文件；保留自己的配置、密钥和状态目录。
+
 ## 安装与升级
 阅读 [部署说明](部署说明.md)。新公开包不包含密钥；首次部署自行生成 .env。
 已有用户升级保留原有 .env、state、自定义区域与挂载，不能用公共示例覆盖实际配置。

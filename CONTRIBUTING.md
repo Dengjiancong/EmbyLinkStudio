@@ -18,6 +18,7 @@ Linux GUI 测试需 tkinter、Xvfb 和显示环境；可用 `xvfb-run -a python 
 - 不捕获异常后虚报成功；可能已写入时保留现场并说明部分完成。
 
 ## 提交前
+Git 提交信息使用中文，说明修改目的。Release 标题与正文也使用中文；不重写已有提交历史。
 运行测试、`python tools/check_public.py`、`git diff --check`。
 Windows 构建运行 `./build.ps1`；公开包验证运行 `python tools/check_release.py dist`。
 更新 CHANGELOG 和用户说明。版本号只在 link_rules.py 的 VERSION 修改。
