@@ -5,8 +5,8 @@
 ## 开发
 使用 Python 3.12。旧 SFTP 回归依赖安装命令：
 `python -m pip install -r requirements-dev.txt`
-运行：`python -m unittest discover -s . -p "test_*.py"`
-Linux GUI 测试需 tkinter、Xvfb 和显示环境；可用 `xvfb-run -a python -m unittest discover -s . -p "test_*.py"`。Linux x86-64 才支持实际 seccomp 启动；Windows 中跳过的测试不能冒充通过。
+运行：`python -m unittest discover -s tests -t . -p "test_*.py"`
+Linux GUI 测试需 tkinter、Xvfb 和显示环境；可用 `xvfb-run -a python -m unittest discover -s tests -t . -p "test_*.py"`。Linux x86-64 才支持实际 seccomp 启动；Windows 中跳过的测试不能冒充通过。
 
 ## 修改原则
 - 单独提交行为变化，避免将目录重构与命名规则修改混合。
@@ -21,6 +21,6 @@ Linux GUI 测试需 tkinter、Xvfb 和显示环境；可用 `xvfb-run -a python 
 Git 提交信息使用中文，说明修改目的。Release 标题与正文也使用中文；不重写已有提交历史。
 运行测试、`python tools/check_public.py`、`git diff --check`。
 Windows 构建运行 `./build.ps1`；公开包验证运行 `python tools/check_release.py dist`。
-更新 CHANGELOG 和用户说明。版本号只在 link_rules.py 的 VERSION 修改。
+更新 CHANGELOG 和用户说明。版本号只在 src/link_rules.py 的 VERSION 修改。
 
 项目采用 MIT；提交贡献表示你有权提供该内容，并同意以 MIT 纳入项目。第三方依赖继续遵守自身许可。

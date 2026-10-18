@@ -17,12 +17,12 @@ RELEASE_GUIDE = "v0.11使用说明.md"
 
 
 def manifest(incremental=False):
-    entries = {f"app/{name}": name for name in NAS_MODULES}
+    entries = {f"app/{name}": f"src/{name}" for name in NAS_MODULES}
     entries.update({
         "LICENSE": "LICENSE",
         "THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md",
-        "部署说明.md": "部署说明.md",
-        RELEASE_GUIDE: RELEASE_GUIDE,
+        "部署说明.md": "docs/guides/部署说明.md",
+        RELEASE_GUIDE: "docs/guides/" + RELEASE_GUIDE,
     })
     if incremental:
         entries.update({

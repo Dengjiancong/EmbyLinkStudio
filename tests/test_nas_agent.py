@@ -1,4 +1,4 @@
-from testing_support import cleanup_after_idle
+from tests.testing_support import cleanup_after_idle
 import json,os,tempfile,threading,time,unittest
 from pathlib import Path
 from unittest.mock import patch

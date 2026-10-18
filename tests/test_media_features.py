@@ -1,4 +1,4 @@
-from testing_support import cleanup_after_idle
+from tests.testing_support import cleanup_after_idle
 import os,time,tempfile,threading,unittest
 from pathlib import Path
 from xml.etree import ElementTree as ET

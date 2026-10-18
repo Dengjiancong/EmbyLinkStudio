@@ -46,7 +46,7 @@ for action in (lambda:os.unlink(p/'original'),lambda:os.rename(p/'original',p/'r
     else:raise AssertionError('Destructive operation allowed')
 assert (p/'original').read_text()=='keep'
 """
-            result=subprocess.run([sys.executable,"-c",code,directory],cwd=str(Path(__file__).parent),capture_output=True,text=True)
+            result=subprocess.run([sys.executable,"-c",code,directory],cwd=str(Path(__file__).resolve().parents[1]/"src"),capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertEqual(original.read_text(),"keep")
 if __name__=="__main__":unittest.main()
