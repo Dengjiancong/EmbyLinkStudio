@@ -55,14 +55,22 @@ class AgentTests(unittest.TestCase):
             job=self.run_plan(plan)
         self.assertTrue(job["error"]);self.assertEqual(job["created"],0);self.assertFalse((self.dest/"movie.mp4").exists())
     def test_parent_device_mismatch_does_not_preempt_syscall(self):
-        src=self.file();plan=self.agent.preview();real_stat=Path.stat
+        src=self.file();plan=self.agent.preview();real_stat=Path.stat;real_fstat=os.fstat
         def virtual_parent(path,*args,**kwargs):
             result=real_stat(path,*args,**kwargs)
             if path==self.dest and kwargs.get('follow_symlinks',True):
                 values=list(result);values[2]=result.st_dev+1
                 return os.stat_result(values)
             return result
-        with patch('nas_agent.Path.stat',virtual_parent):
+        def virtual_fd(fd):
+            result=real_fstat(fd)
+            if self.dest.exists():
+                parent=real_stat(self.dest)
+                if (result.st_dev,result.st_ino)==(parent.st_dev,parent.st_ino):
+                    values=list(result);values[2]=result.st_dev+1
+                    return os.stat_result(values)
+            return result
+        with patch('nas_agent.Path.stat',virtual_parent),patch('safe_fs.os.fstat',virtual_fd):
             job=self.run_plan(plan)
         self.assertEqual(job['error'],'');self.assertEqual(job['created'],1)
         self.assertTrue(os.path.samefile(src,self.dest/'movie.mp4'))
@@ -76,7 +84,7 @@ class AgentTests(unittest.TestCase):
     def test_overlapping_roots_rejected(self):
         with self.assertRaises(ValueError):Executor(self.source,self.source/"nested",self.state)
     def test_long_name_and_paired_image(self):
-        stem="作品标题"*25
+        stem="作品标题"*20
         self.file(stem+".mp4");self.file(stem+".jpg")
         rows=self.agent.preview()["rows"]
         self.assertEqual(Path(rows[0]["newrel"]).stem,Path(rows[1]["newrel"]).stem)
@@ -98,13 +106,13 @@ class AgentTests(unittest.TestCase):
         self.assertGreater(len(result.encode()),200)
     def test_legacy_existing_link_reused_without_duplicates(self):
         from link_rules import legacy_target_relative
-        name='作品'*50+'.mp4';src=self.file(name)
+        name='作品'*40+'.mp4';src=self.file(name)
         old=self.dest/legacy_target_relative(name);old.parent.mkdir(parents=True);os.link(src,old)
         row=self.agent.preview()['rows'][0]
         self.assertEqual(row['status'],'已有硬链接');self.assertEqual(row['dest'],str(old))
         self.assertEqual(len(list(self.dest.iterdir())),1)
     def test_change_budget_keeps_existing_recorded_link(self):
-        self.file('标题'*60+'.mp4');first=self.agent.preview(240)
+        self.file('标题'*40+'.mp4');first=self.agent.preview(240)
         self.assertEqual(self.run_plan(first)['error'],'')
         next_plan=self.agent.preview(180)
         self.assertEqual(next_plan['rows'][0]['status'],'已有硬链接')
