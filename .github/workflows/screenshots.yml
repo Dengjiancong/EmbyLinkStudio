@@ -1,0 +1,36 @@
+name: 生成软件展示截图
+on:
+  push:
+    branches: [main]
+    paths: [screenshot-request.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: screenshots
+  cancel-in-progress: false
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: 安装截图与中文字体依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk xvfb xauth fonts-noto-cjk
+          python -m pip install pillow
+      - name: 截取真实界面并使用隔离示例数据
+        run: xvfb-run -a -s "-screen 0 1920x1200x24" python tools/capture_screenshots.py
+      - name: 仅提交两张展示图
+        run: |
+          git add -- docs/screenshots/preview.png docs/screenshots/verification.png
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m '文档：补充只读预览与硬链接核验界面截图'
+          git push origin HEAD:main
